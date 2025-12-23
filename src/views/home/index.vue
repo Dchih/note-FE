@@ -167,6 +167,38 @@ const handleNoteClick = (note: NoteItem) => {
   router.push(`/editor/${note.id}`);
 };
 
+// 删除笔记
+const deleteNote = async (note: NoteItem, event: Event) => {
+  // 阻止事件冒泡，避免触发卡片的点击事件
+  event.stopPropagation();
+
+  // 确认删除
+  if (!confirm(`确定要删除笔记「${note.title}」吗？`)) {
+    return;
+  }
+
+  try {
+    // 调用 API 删除
+    await notesApi.delete(note.id);
+
+    // 从列表中移除该笔记
+    columns.value.forEach((column, colIndex) => {
+      const noteIndex = column.findIndex((n) => n.id === note.id);
+      if (noteIndex !== -1) {
+        column.splice(noteIndex, 1);
+        // 更新该列的高度估算
+        const estimatedHeight = 100 + note.content.length * 0.5;
+        columnHeights.value[colIndex] -= estimatedHeight + 16;
+      }
+    });
+
+    console.log("删除笔记成功:", note.id);
+  } catch (error: any) {
+    console.error("删除笔记失败:", error);
+    alert(error.message || "删除失败，请稍后重试");
+  }
+};
+
 // 创建新笔记
 const createNewNote = () => {
   router.push("/editor/new");
@@ -236,7 +268,16 @@ onUnmounted(() => {
         >
           <div class="note-header">
             <h3 class="note-title">{{ note.title }}</h3>
-            <span class="note-date">{{ note.date }}</span>
+            <div class="note-meta">
+              <span class="note-date">{{ note.date }}</span>
+              <button
+                @click="deleteNote(note, $event)"
+                class="delete-btn"
+                title="删除笔记"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="note-content">
             {{ note.content }}
@@ -365,6 +406,16 @@ onUnmounted(() => {
   font-weight: 600;
   color: #2c3e50;
   letter-spacing: 0.5px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .note-date {
@@ -374,6 +425,36 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.6);
   padding: 2px 8px;
   border-radius: 10px;
+}
+
+.delete-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  transition: all 0.2s ease;
+  padding: 0;
+  opacity: 0.6;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  background: #ff6b6b;
+  color: white;
+  transform: scale(1.1);
+}
+
+.note-card:hover .delete-btn {
+  opacity: 0.8;
 }
 
 .note-content {

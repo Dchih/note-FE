@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter, onBeforeRouteLeave } from "vue-router";
 import { useEditor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
@@ -48,8 +48,11 @@ const editor = useEditor({
   },
 });
 
-// 从 API 加载笔记数据
-onMounted(async () => {
+// 加载笔记数据的函数
+const loadNoteData = async () => {
+  // 开始初始化
+  isInitializing.value = true;
+
   if (isNewNote.value) {
     // 新笔记
     noteTitle.value = "新笔记";
@@ -116,7 +119,36 @@ onMounted(async () => {
     hasUnsavedChanges.value = false;
     isInitializing.value = false; // 初始化完成
   }, 100);
+};
+
+// 从 API 加载笔记数据
+onMounted(async () => {
+  await loadNoteData();
 });
+
+// 监听路由变化，清理缓存并重新加载
+watch(
+  () => route.params.id,
+  async (newId) => {
+    if (newId) {
+      console.log("路由参数变化，清理缓存并重新加载:", newId);
+
+      // 更新笔记ID和类型
+      const paramId = newId as string;
+      isNewNote.value = paramId === "new";
+      noteId.value = isNewNote.value ? Date.now() : Number(paramId);
+
+      // 重置所有状态
+      hasUnsavedChanges.value = false;
+      isSaving.value = false;
+      showConfirmDialog.value = false;
+      pendingNavigation.value = null;
+
+      // 重新加载笔记数据
+      await loadNoteData();
+    }
+  }
+);
 
 onBeforeUnmount(() => {
   if (editor.value) {
