@@ -29,5 +29,27 @@ export default defineConfig(async () => ({
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
+    // 配置代理解决跨域问题
+    proxy: {
+      '/api': {
+        target: 'https://dragonballchih.top',  // 使用 HTTPS
+        changeOrigin: true,
+        secure: true,  // 启用 SSL 验证
+        // 确保转发所有请求头，特别是 Authorization
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // 显式转发 Authorization 请求头
+            if (req.headers.authorization) {
+              proxyReq.setHeader('Authorization', req.headers.authorization);
+            }
+
+            // 显式转发 Content-Type
+            if (req.headers['content-type']) {
+              proxyReq.setHeader('Content-Type', req.headers['content-type']);
+            }
+          });
+        },
+      },
+    },
   },
 }));
