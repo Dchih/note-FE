@@ -31,22 +31,26 @@ export default defineConfig(async () => ({
     },
     // 配置代理解决跨域问题
     proxy: {
-      '/api': {
-        target: 'https://dragonballchih.top',  // 使用 HTTPS
+      "/api": {
+        target: "http://127.0.0.1:8200/",
         changeOrigin: true,
-        secure: true,  // 启用 SSL 验证
+        ws: true,
+        rewrite: (path: string) => path.replace(/^\/api/, ''),
+        // secure: true, // 启用 SSL 验证
         // 确保转发所有请求头，特别是 Authorization
         configure: (proxy, _options) => {
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            // 显式转发 Authorization 请求头
-            if (req.headers.authorization) {
-              proxyReq.setHeader('Authorization', req.headers.authorization);
-            }
-
-            // 显式转发 Content-Type
-            if (req.headers['content-type']) {
-              proxyReq.setHeader('Content-Type', req.headers['content-type']);
-            }
+          proxy.on("proxyReq", (proxyReq, req, _res) => {
+            console.log("[Proxy]", req.method, req.url);
+            console.log(
+              "[Proxy] Headers:",
+              JSON.stringify(proxyReq.getHeaders()),
+            );
+          });
+          proxy.on("proxyRes", (proxyRes, req, _res) => {
+            console.log("[Proxy] Response:", proxyRes.statusCode, req.url);
+          });
+          proxy.on("error", (err, req, _res) => {
+            console.error("[Proxy] Error:", err.message, req.url);
           });
         },
       },

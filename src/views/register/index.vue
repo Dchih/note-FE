@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { request } from "../../utils/api";
+import MountainBackground from "../../components/MountainBackground.vue";
 
 const router = useRouter();
 
@@ -69,28 +71,14 @@ const handleRegister = async () => {
   loading.value = true;
 
   try {
-    // 调用注册 API
-    const response = await fetch("https://dragonballchih.top/api/register", {
+    await request("/register", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({
         username: username.value,
         password: password.value,
         email: email.value,
       }),
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      // 处理错误响应
-      throw new Error(data.message || "注册失败");
-    }
-
-    // 注册成功
-    console.log("注册成功", data);
 
     // 注册成功后跳转到登录页
     router.push("/login");
@@ -117,12 +105,8 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 <template>
   <div class="register-container">
-    <!-- 动态背景 -->
-    <div class="background-animation">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-    </div>
+    <!-- 山脉 Shader 背景 -->
+    <MountainBackground />
 
     <!-- 注册卡片 -->
     <div class="register-card">
@@ -233,59 +217,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* 动态背景动画 */
-.background-animation {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  animation: float 20s infinite ease-in-out;
-}
-
-.circle-1 {
-  width: 300px;
-  height: 300px;
-  top: 10%;
-  left: 10%;
-  animation-delay: 0s;
-}
-
-.circle-2 {
-  width: 200px;
-  height: 200px;
-  top: 60%;
-  right: 15%;
-  animation-delay: 5s;
-}
-
-.circle-3 {
-  width: 400px;
-  height: 400px;
-  bottom: -10%;
-  left: 50%;
-  animation-delay: 10s;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
+  background: #1a1510;
 }
 
 /* 注册卡片 */
@@ -294,10 +226,11 @@ const handleKeyPress = (event: KeyboardEvent) => {
   width: 100%;
   max-width: 460px;
   padding: 48px 40px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   z-index: 1;
   animation: slideUp 0.6s ease-out;
   max-height: 90vh;
@@ -325,7 +258,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   margin: 0 0 8px 0;
   font-size: 32px;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f0c27f 0%, #fc5c7d 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -334,7 +267,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 .register-subtitle {
   margin: 0;
   font-size: 16px;
-  color: #7f8c8d;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* 表单 */
@@ -353,42 +286,44 @@ const handleKeyPress = (event: KeyboardEvent) => {
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #2c3e50;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .form-input {
   width: 100%;
   padding: 14px 16px;
   font-size: 15px;
-  border: 2px solid #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   outline: none;
   transition: all 0.3s ease;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
   box-sizing: border-box;
 }
 
 .form-input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: rgba(240, 194, 127, 0.6);
+  box-shadow: 0 0 0 4px rgba(240, 194, 127, 0.1);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .form-input:disabled {
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.04);
   cursor: not-allowed;
 }
 
 .form-input::placeholder {
-  color: #bdc3c7;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* 错误消息 */
 .error-message {
   padding: 12px 16px;
-  background: #fee;
-  border: 1px solid #fcc;
+  background: rgba(255, 80, 80, 0.15);
+  border: 1px solid rgba(255, 80, 80, 0.3);
   border-radius: 8px;
-  color: #c33;
+  color: #ff8a8a;
   font-size: 14px;
   text-align: center;
 }
@@ -403,7 +338,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   align-items: flex-start;
   gap: 8px;
   cursor: pointer;
-  color: #5a6c7d;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
   line-height: 1.6;
 }
@@ -417,14 +352,14 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 .terms-link {
-  color: #667eea;
+  color: #f0c27f;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .terms-link:hover {
-  color: #764ba2;
+  color: #fc5c7d;
   text-decoration: underline;
 }
 
@@ -435,18 +370,18 @@ const handleKeyPress = (event: KeyboardEvent) => {
   font-size: 16px;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f0c27f 0%, #fc5c7d 100%);
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(240, 194, 127, 0.3);
   margin-top: 8px;
 }
 
 .register-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 6px 20px rgba(240, 194, 127, 0.4);
 }
 
 .register-button:active:not(:disabled) {
@@ -484,11 +419,11 @@ const handleKeyPress = (event: KeyboardEvent) => {
 .login-link {
   text-align: center;
   font-size: 14px;
-  color: #7f8c8d;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .login-link a {
-  color: #667eea;
+  color: #f0c27f;
   text-decoration: none;
   font-weight: 600;
   margin-left: 4px;
@@ -497,7 +432,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 .login-link a:hover {
-  color: #764ba2;
+  color: #fc5c7d;
 }
 
 /* 自定义滚动条 */
@@ -506,17 +441,17 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 .register-card::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
 }
 
 .register-card::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.3);
+  background: rgba(240, 194, 127, 0.3);
   border-radius: 10px;
 }
 
 .register-card::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.5);
+  background: rgba(240, 194, 127, 0.5);
 }
 
 /* 响应式设计 */
@@ -537,10 +472,6 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
   .register-form {
     gap: 16px;
-  }
-
-  .circle {
-    display: none;
   }
 }
 </style>

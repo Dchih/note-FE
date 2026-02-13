@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { request } from "../../utils/api";
+import MountainBackground from "../../components/MountainBackground.vue";
 
 const router = useRouter();
 
@@ -28,38 +30,29 @@ const handleLogin = async () => {
   loading.value = true;
 
   try {
-    // 调用登录 API
-    const response = await fetch("https://dragonballchih.top/api/login", {
+    const data = await request("/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify({
         username: username.value,
         password: password.value,
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      // 处理错误响应
-      throw new Error(data.message || "登录失败");
-    }
-
-    // 登录成功
-    console.log("登录成功", data);
-
-    // 保存 token 或用户信息（如果 API 返回）
+    // 保存 token 和用户信息
     if (data.token) {
       localStorage.setItem("token", data.token);
     }
-    if (data.user) {
-      localStorage.setItem("user", JSON.stringify(data.user));
+    // 存储用户名（后端返回 data 字段为用户对象）
+    const user = data.data || data.user;
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("username", user.username || username.value);
+    } else {
+      localStorage.setItem("username", username.value);
     }
 
-    // 登录成功后跳转到首页
-    router.push("/home");
+    // 登录成功后跳转到聊天页
+    router.push("/chat");
   } catch (error: any) {
     errorMessage.value = error.message || "登录失败，请检查用户名和密码";
     console.error("登录错误:", error);
@@ -83,12 +76,8 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 <template>
   <div class="login-container">
-    <!-- 动态背景 -->
-    <div class="background-animation">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-    </div>
+    <!-- 山脉 Shader 背景 -->
+    <MountainBackground />
 
     <!-- 登录卡片 -->
     <div class="login-card">
@@ -166,59 +155,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-/* 动态背景动画 */
-.background-animation {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  animation: float 20s infinite ease-in-out;
-}
-
-.circle-1 {
-  width: 300px;
-  height: 300px;
-  top: 10%;
-  left: 10%;
-  animation-delay: 0s;
-}
-
-.circle-2 {
-  width: 200px;
-  height: 200px;
-  top: 60%;
-  right: 15%;
-  animation-delay: 5s;
-}
-
-.circle-3 {
-  width: 400px;
-  height: 400px;
-  bottom: -10%;
-  left: 50%;
-  animation-delay: 10s;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
+  background: #1a1510;
 }
 
 /* 登录卡片 */
@@ -227,10 +164,11 @@ const handleKeyPress = (event: KeyboardEvent) => {
   width: 100%;
   max-width: 420px;
   padding: 48px 40px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   z-index: 1;
   animation: slideUp 0.6s ease-out;
 }
@@ -255,8 +193,9 @@ const handleKeyPress = (event: KeyboardEvent) => {
 .login-title {
   margin: 0 0 8px 0;
   font-size: 32px;
+  line-height: 40px;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f0c27f 0%, #fc5c7d 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -265,7 +204,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 .login-subtitle {
   margin: 0;
   font-size: 16px;
-  color: #7f8c8d;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* 表单 */
@@ -284,42 +223,44 @@ const handleKeyPress = (event: KeyboardEvent) => {
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #2c3e50;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .form-input {
   width: 100%;
   padding: 14px 16px;
   font-size: 15px;
-  border: 2px solid #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   outline: none;
   transition: all 0.3s ease;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
   box-sizing: border-box;
 }
 
 .form-input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: rgba(240, 194, 127, 0.6);
+  box-shadow: 0 0 0 4px rgba(240, 194, 127, 0.1);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .form-input:disabled {
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.04);
   cursor: not-allowed;
 }
 
 .form-input::placeholder {
-  color: #bdc3c7;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* 错误消息 */
 .error-message {
   padding: 12px 16px;
-  background: #fee;
-  border: 1px solid #fcc;
+  background: rgba(255, 80, 80, 0.15);
+  border: 1px solid rgba(255, 80, 80, 0.3);
   border-radius: 8px;
-  color: #c33;
+  color: #ff8a8a;
   font-size: 14px;
   text-align: center;
 }
@@ -337,7 +278,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  color: #5a6c7d;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .remember-me input[type="checkbox"] {
@@ -347,14 +288,14 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 .forgot-password {
-  color: #667eea;
+  color: #f0c27f;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .forgot-password:hover {
-  color: #764ba2;
+  color: #fc5c7d;
 }
 
 /* 登录按钮 */
@@ -364,17 +305,17 @@ const handleKeyPress = (event: KeyboardEvent) => {
   font-size: 16px;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f0c27f 0%, #fc5c7d 100%);
   border: none;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 15px rgba(240, 194, 127, 0.3);
 }
 
 .login-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 6px 20px rgba(240, 194, 127, 0.4);
 }
 
 .login-button:active:not(:disabled) {
@@ -412,11 +353,11 @@ const handleKeyPress = (event: KeyboardEvent) => {
 .register-link {
   text-align: center;
   font-size: 14px;
-  color: #7f8c8d;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .register-link a {
-  color: #667eea;
+  color: #f0c27f;
   text-decoration: none;
   font-weight: 600;
   margin-left: 4px;
@@ -425,7 +366,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 }
 
 .register-link a:hover {
-  color: #764ba2;
+  color: #fc5c7d;
 }
 
 /* 响应式设计 */
@@ -441,10 +382,6 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
   .login-subtitle {
     font-size: 14px;
-  }
-
-  .circle {
-    display: none;
   }
 }
 </style>

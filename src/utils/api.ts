@@ -9,14 +9,18 @@ const getToken = () => {
   return localStorage.getItem("token");
 };
 
+// 不需要鉴权的接口
+const PUBLIC_URLS = ['/login', '/register'];
+
 // 通用请求函数
 export const request = async (url: string, options: RequestInit = {}) => {
   const token = getToken();
+  const needAuth = !PUBLIC_URLS.includes(url);
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...options.headers,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(needAuth && token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   const payload = {
@@ -25,6 +29,7 @@ export const request = async (url: string, options: RequestInit = {}) => {
   };
 
   const response = await fetch(`${API_BASE_URL}${url}`, payload);
+  console.log(response)
 
   const data = payload.method === "DELETE" ? {code: 204, msg: "ok"} : await response.json();
 
