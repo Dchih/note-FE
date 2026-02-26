@@ -32,11 +32,11 @@ export default defineConfig(async () => ({
     // 配置代理解决跨域问题
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8200/",
+        target: "https://dragonballchih.top/api/",
         changeOrigin: true,
         ws: true,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
-        // secure: true, // 启用 SSL 验证
+        secure: true, // 启用 SSL 验证
         // 确保转发所有请求头，特别是 Authorization
         configure: (proxy, _options) => {
           proxy.on("proxyReq", (proxyReq, req, _res) => {

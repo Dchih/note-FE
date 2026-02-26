@@ -83,7 +83,6 @@ const handleKeyPress = (event: KeyboardEvent) => {
     <div class="login-card">
       <div class="login-header">
         <h1 class="login-title">欢迎回来</h1>
-        <p class="login-subtitle">登录到您的笔记应用</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="login-form">
